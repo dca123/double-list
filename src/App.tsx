@@ -17,45 +17,33 @@ import { DevTools } from "jotai-devtools";
 const initialData = [
   {
     name: "Carrots",
-    clicked: atom(false),
-    selected: atom(false),
   },
   {
     name: "Potatoes",
-    clicked: atom(false),
-    selected: atom(false),
   },
   {
     name: "Beans",
-    clicked: atom(false),
-    selected: atom(true),
   },
   {
     name: "Bacon",
-    clicked: atom(false),
-    selected: atom(false),
   },
 ];
+const itemsAtoms = atom(initialData);
+const itemAtomsAtom = splitAtom(itemsAtoms);
 
-const dataAtom = atom(initialData);
 type Item = typeof initialData[number];
 
 type ChipProps = {
   atom: Atom<Item>;
+  removeItem: () => void;
 };
 
-const Chip = ({ atom }: ChipProps) => {
+const Chip = ({ atom, removeItem }: ChipProps) => {
   const item = useAtomValue(atom);
-  const [clicked, setClicked] = useAtom(item.clicked);
   return (
     <div
-      className={clsx(
-        "border-2 rounded-xl px-2 cursor-pointer",
-        clicked
-          ? "bg-violet-200 border-violet-200 text-violet-900"
-          : "bg-slate-50"
-      )}
-      onClick={() => setClicked((clicked) => !clicked)}
+      className={clsx("border-2 rounded-xl px-2 cursor-pointer")}
+      onClick={() => removeItem()}
     >
       {item.name}
     </div>
@@ -71,100 +59,45 @@ const ChipContainer = ({ type, children }: ChipContainerProps) => {
   const title = type === "selected" ? "Selected" : "Unselected";
   return (
     <div className="border-2 p-4 rounded">
-      <h2 className="text-xl mb-4">{title}</h2>
+      <h2 className="text-xl mb-4">Items (Click to remove)</h2>
       <div className="grid grid-cols-5 gap-2">{children}</div>
     </div>
   );
 };
 
-type ChipListProps = {
-  atoms: typeof selectAtomsAtom | typeof unselectAtomsAtom;
-};
+type ChipListProps = {};
 
-const ChipList = ({ atoms }: ChipListProps) => {
-  const items = useAtomValue(atoms);
+const ChipList = ({}: ChipListProps) => {
+  const [items, dispatch] = useAtom(itemAtomsAtom);
   return (
     <>
       {items.map((item) => (
-        <Chip atom={item} key={`${item.toString()}`} />
+        <Chip
+          atom={item}
+          key={`${item.toString()}`}
+          removeItem={() => dispatch({ type: "remove", atom: item })}
+        />
       ))}
     </>
   );
 };
-const selectAtoms = atom(
-  (get) => get(dataAtom).filter((item) => get(item.selected) === true),
-  (get, set) => {
-    const items = get(unselectAtoms);
-    const clickedItems = items.filter((item) => get(item.clicked) === true);
-    clickedItems.forEach((item) => {
-      set(item.selected, true);
-      set(item.clicked, false);
-    });
-  }
-);
-const selectAtomsAtom = splitAtom(selectAtoms);
-
-const unselectAtoms = atom(
-  (get) => get(dataAtom).filter((item) => get(item.selected) === false),
-  (get, set) => {
-    const items = get(selectAtoms);
-    const clickedItems = items.filter((item) => get(item.clicked) === true);
-    clickedItems.forEach((item) => {
-      set(item.selected, false);
-      set(item.clicked, false);
-    });
-  }
-);
-const unselectAtomsAtom = splitAtom(unselectAtoms);
 
 const AddButton = () => {
-  const setItems = useSetAtom(selectAtoms);
+  const setItems = useSetAtom(itemAtomsAtom);
 
   return (
     <button
       className="mt-4 border-2 px-4 py-2 rounded bg-slate-300 text-xl"
       onClick={() => {
-        setItems();
+        setItems({
+          type: "insert",
+          value: {
+            name: "New Item",
+          },
+        });
       }}
     >
       Add
-    </button>
-  );
-};
-
-const RemoveButton = () => {
-  const setItems = useSetAtom(unselectAtoms);
-
-  return (
-    <button
-      className="mt-4 border-2 px-4 py-2 rounded bg-slate-300 text-xl"
-      onClick={() => {
-        setItems();
-      }}
-    >
-      Remove
-    </button>
-  );
-};
-
-const clickAtoms = atom(null, (get, set) => {
-  const items = get(unselectAtoms);
-  items.forEach((item) => {
-    set(item.clicked, (clicked) => !clicked);
-  });
-});
-
-const ToggleSelectAll = () => {
-  const setItems = useSetAtom(clickAtoms);
-
-  return (
-    <button
-      className="mt-4 border-2 px-4 py-2 rounded bg-slate-300 text-xl"
-      onClick={() => {
-        setItems();
-      }}
-    >
-      Toggle Select All
     </button>
   );
 };
@@ -176,18 +109,13 @@ const App = () => {
       <h1 className="text-3xl mb-8">Double List</h1>
       <div className="flex flex-row space-x-4 justify-between">
         <ChipContainer type="unselected">
-          <ChipList atoms={unselectAtomsAtom} />
-        </ChipContainer>
-        <ChipContainer type="selected">
-          <ChipList atoms={selectAtomsAtom} />
+          <ChipList />
         </ChipContainer>
       </div>
       <div className="flex flex-row justify-between">
         <div className="space-x-4">
           <AddButton />
-          <ToggleSelectAll />
         </div>
-        <RemoveButton />
       </div>
     </div>
   );
