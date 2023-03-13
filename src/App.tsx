@@ -25,7 +25,7 @@ const initialData = [
     selected: false,
   },
   {
-    name: "Green Beans",
+    name: "Beans",
     clicked: false,
     selected: true,
   },
@@ -60,23 +60,33 @@ const Chip = ({ atom }: ChipProps) => {
   );
 };
 
-type ChipListProps = {
-  atoms: typeof selectAtomsAtom | typeof unselectAtomsAtom;
+type ChipContainerProps = {
   type: "selected" | "unselected";
+  children: React.ReactNode;
 };
 
-const ChipList = ({ atoms, type }: ChipListProps) => {
+const ChipContainer = ({ type, children }: ChipContainerProps) => {
   const title = type === "selected" ? "Selected" : "Unselected";
-  const [items] = useAtom(atoms);
   return (
     <div className="border-2 p-4 rounded">
       <h2 className="text-xl mb-4">{title}</h2>
-      <div className="grid grid-cols-5 gap-2">
-        {items.map((item) => (
-          <Chip atom={item} key={`${item.toString()}`} />
-        ))}
-      </div>
+      <div className="grid grid-cols-5 gap-2">{children}</div>
     </div>
+  );
+};
+
+type ChipListProps = {
+  atoms: typeof selectAtomsAtom | typeof unselectAtomsAtom;
+};
+
+const ChipList = ({ atoms }: ChipListProps) => {
+  const items = useAtomValue(atoms);
+  return (
+    <>
+      {items.map((item) => (
+        <Chip atom={item} key={`${item.toString()}`} />
+      ))}
+    </>
   );
 };
 const selectAtoms = focusAtom(dataAtom, (optic) =>
@@ -102,7 +112,6 @@ const AddButton = () => {
               return {
                 ...item,
                 selected: true,
-                clicked: false,
               };
             }
             return item;
@@ -128,7 +137,6 @@ const RemoveButton = () => {
               return {
                 ...item,
                 selected: false,
-                clicked: false,
               };
             }
             return item;
@@ -154,7 +162,6 @@ const SelectAll = () => {
               return {
                 ...item,
                 selected: false,
-                clicked: true,
               };
             }
             return item;
@@ -172,8 +179,12 @@ const App = () => {
     <div className="container mx-auto">
       <h1 className="text-3xl mb-8">Double List</h1>
       <div className="flex flex-row space-x-4 justify-between">
-        <ChipList atoms={unselectAtomsAtom} type="unselected" />
-        <ChipList atoms={selectAtomsAtom} type="selected" />
+        <ChipContainer type="unselected">
+          <ChipList atoms={unselectAtomsAtom} />
+        </ChipContainer>
+        <ChipContainer type="selected">
+          <ChipList atoms={selectAtomsAtom} />
+        </ChipContainer>
       </div>
       <div className="flex flex-row justify-between">
         <div className="space-x-4">
