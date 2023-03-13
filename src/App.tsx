@@ -15,22 +15,22 @@ import type { OpticFor } from "optics-ts";
 
 const initialData = [
   {
-    name: "test",
+    name: "Carrots",
     clicked: false,
     selected: false,
   },
   {
-    name: "test 2",
+    name: "Potatoes",
     clicked: false,
     selected: false,
   },
   {
-    name: "test 3",
+    name: "Green Beans",
     clicked: false,
     selected: true,
   },
   {
-    name: "test 4",
+    name: "Bacon",
     clicked: false,
     selected: false,
   },
